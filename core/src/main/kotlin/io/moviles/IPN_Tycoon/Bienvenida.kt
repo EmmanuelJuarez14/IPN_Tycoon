@@ -12,7 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable
 import com.badlogic.gdx.utils.Scaling
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.FitViewport
 import ktx.actors.onChange
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
@@ -20,7 +20,12 @@ import ktx.assets.toInternalFile
 import ktx.scene2d.*
 
 class Bienvenida(private val game: Main) : KtxScreen {
-    private val stage = Stage(ScreenViewport())
+    // Definimos una resolución virtual fija para evitar deformaciones
+    private val virtualWidth = 800f
+    private val virtualHeight = 480f
+
+    // Usamos FitViewport para mantener la relación de aspecto
+    private val stage = Stage(FitViewport(virtualWidth, virtualHeight))
     private var pixelFont: BitmapFont? = null
 
     private val backgroundTexture by lazy {
@@ -30,30 +35,27 @@ class Bienvenida(private val game: Main) : KtxScreen {
         } else null
     }
 
-    // Textura refinada para simular el estilo de la imagen (Pixel Art redondeado)
     private val pixelTexture: Texture by lazy {
         val pixmap = Pixmap(12, 12, Pixmap.Format.RGBA8888)
         pixmap.blending = Pixmap.Blending.None
-
-        // 1. Limpiar (Transparente)
         pixmap.setColor(0f, 0f, 0f, 0f)
         pixmap.fill()
 
-        // 2. Borde Exterior (Color Gris-Azulado de la imagen: #3e3e54)
+        // Borde Exterior (#3e3e54)
         pixmap.setColor(Color.valueOf("3e3e54"))
-        pixmap.fillRectangle(2, 0, 8, 12) // Cuerpo vertical
-        pixmap.fillRectangle(0, 2, 12, 8) // Cuerpo horizontal
-        pixmap.fillRectangle(1, 1, 10, 10) // Rellenar esquinas internas
+        pixmap.fillRectangle(2, 0, 8, 12)
+        pixmap.fillRectangle(0, 2, 12, 8)
+        pixmap.fillRectangle(1, 1, 10, 10)
 
-        // 3. Cuerpo Verde Principal (#8cbd5c)
+        // Cuerpo Verde Principal (#8cbd5c)
         pixmap.setColor(Color.valueOf("8cbd5c"))
         pixmap.fillRectangle(1, 1, 10, 10)
 
-        // 4. Sombra Inferior Interna (#5b8c3f) - Más gruesa para dar volumen
+        // Sombra Inferior (#5b8c3f)
         pixmap.setColor(Color.valueOf("5b8c3f"))
         pixmap.fillRectangle(1, 6, 10, 5)
 
-        // 5. Brillo Superior Interno (#c8e6a1) - Solo una línea fina
+        // Brillo Superior (#c8e6a1)
         pixmap.setColor(Color.valueOf("c8e6a1"))
         pixmap.fillRectangle(2, 1, 8, 1)
 
@@ -65,9 +67,8 @@ class Bienvenida(private val game: Main) : KtxScreen {
         return if (fontFile.exists()) {
             val generator = FreeTypeFontGenerator(fontFile)
             val parameter = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
-                size = 44
+                size = 40 // Ajustado para la nueva resolución
                 color = Color.WHITE
-                // Sombra de la fuente más gruesa para estilo retro
                 shadowColor = Color.valueOf("3e3e54")
                 shadowOffsetX = 3
                 shadowOffsetY = 3
@@ -78,8 +79,9 @@ class Bienvenida(private val game: Main) : KtxScreen {
             generator.dispose()
             font
         } else {
-            Scene2DSkin.defaultSkin.getFont("default-font").apply {
-                region.texture.setFilter(TextureFilter.Nearest, TextureFilter.Nearest)
+            // Fallback si no hay fuente
+            BitmapFont().apply {
+                data.setScale(2f)
             }
         }
     }
@@ -88,14 +90,13 @@ class Bienvenida(private val game: Main) : KtxScreen {
         Gdx.input.inputProcessor = stage
         pixelFont = generatePixelFont()
 
-        // Definimos el NinePatch con un margen de 5 píxeles para proteger la curvatura
         val pixelDrawable = NinePatchDrawable(NinePatch(pixelTexture, 5, 5, 5, 5))
 
         val pixelButtonStyle = TextButtonStyle().apply {
             font = pixelFont
             up = pixelDrawable
-            over = pixelDrawable.tint(Color.valueOf("d1e8b2")) // Tinte verdoso claro al pasar el mouse
-            down = pixelDrawable.tint(Color.valueOf("a0a0a0")) // Oscurece al presionar
+            over = pixelDrawable.tint(Color.valueOf("d1e8b2"))
+            down = pixelDrawable.tint(Color.valueOf("a0a0a0"))
         }
 
         stage.actors {
@@ -108,29 +109,34 @@ class Bienvenida(private val game: Main) : KtxScreen {
 
                 table {
                     setFillParent(true)
-                    // DESPLAZAR HACIA ABAJO
-                    bottom()
+                    bottom() // Alinea el contenido al fondo
 
                     textButton("START") {
                         style = pixelButtonStyle
-                        onChange { game.setScreen<FirstScreen>() }
-                    }.cell(width = 340f, height = 120f, padBottom = 100f)
+                        onChange {
+                            // Navegación hacia la pantalla de juego
+                            game.setScreen<FirstScreen>()
+                        }
+                    }.cell(width = 300f, height = 100f, padBottom = 80f)
                 }
             }
         }
     }
 
     override fun render(delta: Float) {
+        // Limpiamos pantalla con negro antes de dibujar el stage
         clearScreen(0f, 0f, 0f, 1f)
         stage.act(delta)
         stage.draw()
     }
 
     override fun resize(width: Int, height: Int) {
+        // El viewport se encarga de ajustar la cámara correctamente
         stage.viewport.update(width, height, true)
     }
 
     override fun dispose() {
+        // Liberación de memoria obligatoria para el Dev B
         stage.dispose()
         pixelTexture.dispose()
         backgroundTexture?.dispose()
