@@ -19,7 +19,7 @@ class Bienvenida(game: Main) : BaseScreen(game) {
     private var pixelFont: BitmapFont? = null
 
     private val backgroundTexture by lazy {
-        val file = "back_bienvenida.png".toInternalFile()
+        val file = "back_main.png".toInternalFile()
         if (file.exists()) {
             Texture(file).apply { setFilter(TextureFilter.Nearest, TextureFilter.Nearest) }
         } else null

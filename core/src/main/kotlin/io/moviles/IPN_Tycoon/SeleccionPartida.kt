@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.NinePatch
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable
+import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
 import ktx.actors.onChange
 import ktx.app.clearScreen
@@ -18,22 +19,24 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
 
     private var pixelFont: BitmapFont? = null
 
+    // Textura de fondo para la pantalla
+    private val backgroundTexture: Texture by lazy {
+        Texture("back_seleccion.png".toInternalFile()).apply {
+            setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
+        }
+    }
+
     // Textura de fondo para los botones (Pixel Art)
     private val buttonTexture: Texture by lazy {
         val pixmap = Pixmap(12, 12, Pixmap.Format.RGBA8888)
-        // Borde oscuro
         pixmap.setColor(Color.valueOf("3e3e54"))
         pixmap.fillRectangle(0, 0, 12, 12)
-        // Fondo principal (verde)
         pixmap.setColor(Color.valueOf("8cbd5c"))
         pixmap.fillRectangle(1, 1, 10, 10)
-        // Brillo superior
         pixmap.setColor(Color.valueOf("c8e6a1"))
         pixmap.fillRectangle(1, 1, 10, 2)
-        // Sombra inferior
         pixmap.setColor(Color.valueOf("5b8c3f"))
         pixmap.fillRectangle(1, 9, 10, 2)
-
         Texture(pixmap).apply { setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest) }
     }
 
@@ -70,43 +73,40 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
         }
 
         stage.actors {
-            table {
+            stack {
                 setFillParent(true)
-                background = drawable.tint(Color.valueOf("2d2d3a")) // Fondo tipo panel
 
-                // Título con estilo
-                label("GESTIÓN DE CARRERA") {
-                    color = Color.GOLD
-                    setFontScale(1.2f)
-                }.cell(padBottom = 60f)
+                // Imagen de fondo con centrado y escalado correcto
+                image(backgroundTexture) {
+                    setScaling(Scaling.fill)
+                    setAlign(Align.center)
+                }
 
-                row()
-
-                // Contenedor para botones
                 table {
-                    // Botón Nueva Partida
-                    textButton("NUEVA PARTIDA") {
-                        style = customButtonStyle
-                        onChange { game.setScreen<FirstScreen>() }
-                    }.cell(width = 450f, height = 90f, padBottom = 25f)
+                    setFillParent(true)
+                    center()
 
-                    row()
+                    // Contenedor para botones centrado en el stack
+                    table {
+                        textButton("NUEVA PARTIDA") {
+                            style = customButtonStyle
+                            onChange { game.setScreen<FirstScreen>() }
+                        }.cell(width = 450f, height = 90f, padBottom = 25f)
 
-                    // Botón Cargar Partida
-                    textButton("CARGAR PARTIDA") {
-                        style = customButtonStyle
-                        onChange {
-                            println("Cargando partida...")
-                            game.setScreen<FirstScreen>()
-                        }
-                    }.cell(width = 450f, height = 90f)
-                }.cell(pad = 20f)
+                        row()
+
+                        textButton("CARGAR PARTIDA") {
+                            style = customButtonStyle
+                            onChange { game.setScreen<FirstScreen>() }
+                        }.cell(width = 450f, height = 90f)
+                    }.cell(padTop = 120f) // Ajustado para evitar el título del fondo
+                }
             }
         }
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.12f, 0.12f, 0.15f, 1f) // Color de fondo que combine
+        clearScreen(0f, 0f, 0f, 1f)
         stage.act(delta)
         stage.draw()
     }
@@ -114,6 +114,7 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
     override fun dispose() {
         super.dispose()
         buttonTexture.dispose()
+        backgroundTexture.dispose()
         pixelFont?.dispose()
     }
 }
