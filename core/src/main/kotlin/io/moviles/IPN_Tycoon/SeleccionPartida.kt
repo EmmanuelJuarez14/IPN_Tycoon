@@ -19,14 +19,13 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
 
     private var pixelFont: BitmapFont? = null
 
-    // Textura de fondo para la pantalla
+    // --- ASSETS ---
     private val backgroundTexture: Texture by lazy {
         Texture("back_seleccion.png".toInternalFile()).apply {
             setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
         }
     }
 
-    // Textura de fondo para los botones (Pixel Art)
     private val buttonTexture: Texture by lazy {
         val pixmap = Pixmap(12, 12, Pixmap.Format.RGBA8888)
         pixmap.setColor(Color.valueOf("3e3e54"))
@@ -40,6 +39,7 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
         Texture(pixmap).apply { setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest) }
     }
 
+    // --- FONT GENERATION ---
     private fun generatePixelFont(size: Int): BitmapFont {
         val fontFile = "font.ttf".toInternalFile()
         return if (fontFile.exists()) {
@@ -64,6 +64,7 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
         super.show()
         pixelFont = generatePixelFont(24)
 
+        // --- STYLES ---
         val drawable = NinePatchDrawable(NinePatch(buttonTexture, 4, 4, 4, 4))
         val customButtonStyle = TextButtonStyle().apply {
             font = pixelFont
@@ -72,11 +73,11 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
             down = drawable.tint(Color.valueOf("a0a0a0"))
         }
 
+        // --- UI LAYOUT ---
         stage.actors {
             stack {
                 setFillParent(true)
 
-                // Imagen de fondo con centrado y escalado correcto
                 image(backgroundTexture) {
                     setScaling(Scaling.fill)
                     setAlign(Align.center)
@@ -86,20 +87,19 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
                     setFillParent(true)
                     center()
 
-                    // Contenedor para botones centrado en el stack
                     table {
                         textButton("NUEVA PARTIDA") {
                             style = customButtonStyle
-                            onChange { game.setScreen<FirstScreen>() }
+                            onChange { game.setScreen<GameScreen>() }
                         }.cell(width = 450f, height = 90f, padBottom = 25f)
 
                         row()
 
                         textButton("CARGAR PARTIDA") {
                             style = customButtonStyle
-                            onChange { game.setScreen<FirstScreen>() }
+                            onChange { game.setScreen<GameScreen>() }
                         }.cell(width = 450f, height = 90f)
-                    }.cell(padTop = 120f) // Ajustado para evitar el título del fondo
+                    }.cell(padTop = 120f)
                 }
             }
         }

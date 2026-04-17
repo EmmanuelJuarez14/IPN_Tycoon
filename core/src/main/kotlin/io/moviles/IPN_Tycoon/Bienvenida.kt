@@ -18,6 +18,7 @@ import ktx.scene2d.*
 class Bienvenida(game: Main) : BaseScreen(game) {
     private var pixelFont: BitmapFont? = null
 
+    // --- ASSETS ---
     private val backgroundTexture by lazy {
         val file = "back_main.png".toInternalFile()
         if (file.exists()) {
@@ -28,7 +29,7 @@ class Bienvenida(game: Main) : BaseScreen(game) {
     private val pixelTexture: Texture by lazy {
         val pixmap = Pixmap(12, 12, Pixmap.Format.RGBA8888)
         pixmap.blending = Pixmap.Blending.None
-        // ... (Tu código de dibujo del Pixmap se mantiene igual)
+
         pixmap.setColor(Color.valueOf("3e3e54"))
         pixmap.fillRectangle(2, 0, 8, 12)
         pixmap.fillRectangle(0, 2, 12, 8)
@@ -43,6 +44,7 @@ class Bienvenida(game: Main) : BaseScreen(game) {
         Texture(pixmap).apply { setFilter(TextureFilter.Nearest, TextureFilter.Nearest) }
     }
 
+    // --- FONT GENERATION ---
     private fun generatePixelFont(): BitmapFont {
         val fontFile = "font.ttf".toInternalFile()
         return if (fontFile.exists()) {
@@ -65,11 +67,11 @@ class Bienvenida(game: Main) : BaseScreen(game) {
     }
 
     override fun show() {
-        super.show() // Importante: Llama a BaseScreen para configurar el inputProcessor
+        super.show()
         pixelFont = generatePixelFont()
 
+        // --- STYLES ---
         val pixelDrawable = NinePatchDrawable(NinePatch(pixelTexture, 5, 5, 5, 5))
-
         val pixelButtonStyle = TextButtonStyle().apply {
             font = pixelFont
             up = pixelDrawable
@@ -77,6 +79,7 @@ class Bienvenida(game: Main) : BaseScreen(game) {
             down = pixelDrawable.tint(Color.valueOf("a0a0a0"))
         }
 
+        // --- UI LAYOUT ---
         stage.actors {
             stack {
                 setFillParent(true)
@@ -89,7 +92,6 @@ class Bienvenida(game: Main) : BaseScreen(game) {
                     textButton("START") {
                         style = pixelButtonStyle
                         onChange {
-                            // Meta del Día 2: Navegación formal [cite: 99, 154]
                             game.setScreen<SeleccionPartida>()
                         }
                     }.cell(width = 300f, height = 100f, padBottom = 80f)
@@ -104,9 +106,7 @@ class Bienvenida(game: Main) : BaseScreen(game) {
         stage.draw()
     }
 
-
     override fun dispose() {
-        // No llamamos a stage.dispose() aquí, BaseScreen se encarga [cite: 152]
         super.dispose()
         pixelTexture.dispose()
         backgroundTexture?.dispose()
