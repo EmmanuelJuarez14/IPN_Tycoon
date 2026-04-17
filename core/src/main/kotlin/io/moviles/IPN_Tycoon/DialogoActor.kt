@@ -142,4 +142,20 @@ class DialogoActor(
             }
         }
     }
+
+    /**
+     * Retrocede al diálogo anterior.
+     * Retorna true si retrocedió, false si ya estaba en el primer diálogo.
+     */
+    fun retroceder(): Boolean {
+        if (indiceActual > 0) {
+            indiceActual--
+            actualizarContenido()
+            // Al retroceder, mostramos el texto completo de una vez
+            caracteresVisibles = textoCompleto.length
+            labelTexto.setText(textoCompleto)
+            return true
+        }
+        return false
+    }
 }

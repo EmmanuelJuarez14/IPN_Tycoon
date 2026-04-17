@@ -90,14 +90,22 @@ class SeleccionPartida(game: Main) : BaseScreen(game) {
                     table {
                         textButton("NUEVA PARTIDA") {
                             style = customButtonStyle
-                            onChange { game.setScreen<GameScreen>() }
+                            onChange {
+                                val screen = game.getScreen<GameScreen>()
+                                screen.modoCarga = false
+                                game.setScreen<GameScreen>()
+                            }
                         }.cell(width = 450f, height = 90f, padBottom = 25f)
 
                         row()
 
                         textButton("CARGAR PARTIDA") {
                             style = customButtonStyle
-                            onChange { game.setScreen<GameScreen>() }
+                            onChange {
+                                val screen = game.getScreen<GameScreen>()
+                                screen.modoCarga = true
+                                game.setScreen<GameScreen>()
+                            }
                         }.cell(width = 450f, height = 90f)
                     }.cell(padTop = 120f)
                 }
