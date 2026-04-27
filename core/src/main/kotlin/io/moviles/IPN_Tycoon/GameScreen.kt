@@ -50,6 +50,8 @@ class GameScreen(game: Main) : BaseScreen(game) {
         }
     }
     private var backgroundImage: Image? = null
+    private var nombreJugador: String = ""
+    private var nombreEscuela: String = ""
 
     var modoCarga: Boolean = false
 
@@ -95,9 +97,29 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 stage.addActor(it)
                 it.width = stage.width
                 it.height = stage.height
+
+                it.alTerminarNombre = { nombre ->
+                    nombreJugador = nombre
+                    it.variables["nombre"] = nombre
+                    Gdx.app.log("GAME", "Nombre guardado: $nombreJugador")
+                }
+
+                it.alTerminarEscuela = { escuela ->
+                    nombreEscuela = escuela
+                    it.variables["escuela"] = escuela
+                    Gdx.app.log("GAME", "Escuela guardada: $nombreEscuela")
+                }
+
                 it.mostrarConversacion(listOf(
                     Dialogo("?????", "¡Hola! Soy el Ing. Lázaro Cárdenas.", "sprite_saludando.png"),
-                    Dialogo("Ing. Lázaro", "¡Vamos a construir un IMPERIO EDUCATIVO!", "sprite_explicando.png")
+                    Dialogo("Ing. Cárdenas", "Bienvenido a EDU-TYCOON. Aquí podrás crear tu propia institución educativa, tal como lo hice yo.", "sprite_apenado.png"),
+                    Dialogo("Ing. Cárdenas", "¿Y por qué no? Llegar a construir un ¡¡IMPERIO EDUCATIVO!!", "sprite_explicando.png"),
+                    Dialogo("Ing. Cárdenas", "Pero antes que nada, empecemos por lo básico....", "sprite_serio.png"),
+                    Dialogo("Ing. Cárdenas", "¿Cuál es tu nombre?", "sprite_hablando.png", TipoDialogo.INPUT),
+                    Dialogo("Ing. Cárdenas", "¡Un gusto conocerte {nombre}! Prepárate para el resto.", "sprite_saludando.png"),
+                    Dialogo("Ing. Cárdenas", "Tener un buen nombre para tu institución lo es todo.", "sprite_serio.png"),
+                    Dialogo("Ing. Cárdenas", "Así que dime, ¿qué nombre llevará?", "sprite_hablando.png", TipoDialogo.INPUT),
+                    Dialogo("Ing. Cárdenas", "¿{escuela}? Suena genial", "sprite_explicando.png")
                 ))
             }
 
