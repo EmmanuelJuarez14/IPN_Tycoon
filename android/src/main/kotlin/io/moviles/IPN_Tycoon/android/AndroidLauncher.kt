@@ -12,8 +12,10 @@ class AndroidLauncher : AndroidApplication() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // PRUEBA DE ARQUITECTURA (Día 3 y 4)
-        RoomTester.testDatabase(this)
+        // Probar base de datos solo en modo DEBUG
+        if (io.moviles.IPN_Tycoon.BuildConfig.DEBUG) {
+            RoomTester.testDatabase(this)
+        }
 
         initialize(Main(), AndroidApplicationConfiguration().apply {
             useImmersiveMode = true

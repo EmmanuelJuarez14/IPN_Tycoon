@@ -10,7 +10,7 @@ interface EscuelaDao {
     fun getAllEscuelas(): Flow<List<EscuelaEntity>>
 
     @Query("SELECT * FROM escuelas WHERE id = :id")
-    suspend fun getEscuelaById(id: String): EscuelaEntity?
+    suspend fun getEscuelaById(id: Int): EscuelaEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEscuela(escuela: EscuelaEntity)

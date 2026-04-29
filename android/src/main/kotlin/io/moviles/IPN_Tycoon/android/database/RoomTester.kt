@@ -21,9 +21,11 @@ object RoomTester {
                 Log.d("RoomTest", "--- Iniciando prueba de Repository ---")
 
                 val testEscuela = EscuelaEntity(
-                    id = "repo_test_escom",
+                    id = 101,
                     nombre = "ESCOM vía Repository",
-                    capacidad = 3500,
+                    nivel = 1,
+                    cant_alumnos = 3500,
+                    reputacion = 85.0f,
                     comprada = true
                 )
 
@@ -31,7 +33,7 @@ object RoomTester {
                 repository.insertEscuela(testEscuela)
                 Log.d("RoomTest", "Escuela insertada correctamente vía Repositorio.")
 
-                val recuperada = repository.getEscuelaById("repo_test_escom")
+                val recuperada = repository.getEscuelaById(101)
                 if (recuperada != null && recuperada.nombre == "ESCOM vía Repository") {
                     Log.d("RoomTest", "¡PRUEBA EXITOSA! Datos recuperados: ${recuperada.nombre}")
                 } else {

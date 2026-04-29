@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 class EscuelaRepository(private val escuelaDao: EscuelaDao) : BaseRepository() {
     val allEscuelas: Flow<List<EscuelaEntity>> = escuelaDao.getAllEscuelas()
 
-    suspend fun getEscuelaById(id: String): EscuelaEntity? = safeDbCall {
+    suspend fun getEscuelaById(id: Int): EscuelaEntity? = safeDbCall {
         escuelaDao.getEscuelaById(id)
     }
 
