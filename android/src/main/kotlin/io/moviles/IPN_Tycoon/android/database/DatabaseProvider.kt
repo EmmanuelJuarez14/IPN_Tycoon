@@ -12,7 +12,8 @@ object DatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "ipn_tycoon_db"
-            ).build()
+            ).fallbackToDestructiveMigration()
+            .build()
             db = instance
             instance
         }
