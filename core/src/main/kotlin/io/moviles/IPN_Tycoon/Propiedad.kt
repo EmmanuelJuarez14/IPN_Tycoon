@@ -32,8 +32,8 @@ object PropiedadRepository {
             descripcion   = "Escuela Superior de Cómputo",
             capacidad     = 3200,
             baseAlumnos   = 600,
-            mejoraMax     = 5,
-            texturePrefix = "escom",   // → escomlvl1.png, escomlvl2.png …
+            mejoraMax     = 2,         // Hay texturas disponibles sólo para escomlvl1.png y escomlvl2.png
+            texturePrefix = "escom",   // → escomlvl1.png, escomlvl2.png
             renderW       = 3728f,
             renderH       = 1968f
         ),
