@@ -13,8 +13,6 @@ object GameState {
         dinero = DINERO_INICIAL
     }
 
-    fun reiniciar() = reset()
-
     /** Retorna true si el jugador tiene fondos suficientes. */
     fun puedeComprar(costo: Long): Boolean = dinero >= costo
 

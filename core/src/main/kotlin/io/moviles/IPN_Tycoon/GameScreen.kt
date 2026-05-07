@@ -76,7 +76,11 @@ class GameScreen(game: Main) : BaseScreen(game) {
             }
         }
         val fallbackLevel = level.coerceIn(1, 2)
-        return loadBuildingTexture("escomlvl$fallbackLevel")
+        val fallbackTexture = loadBuildingTexture("escomlvl$fallbackLevel")
+        if (fallbackTexture == null) {
+            Gdx.app.error("TEXTURE", "No se encontró textura para ${propiedad.id} (nivel $level), ni fallback escomlvl$fallbackLevel")
+        }
+        return fallbackTexture
     }
 
     // ── Diálogo de intro ──────────────────────────────────────────────
