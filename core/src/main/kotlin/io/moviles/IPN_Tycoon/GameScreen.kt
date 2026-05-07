@@ -30,6 +30,7 @@ import ktx.scene2d.Scene2DSkin
 class GameScreen(game: Main) : BaseScreen(game) {
     private companion object {
         const val MAX_FALLBACK_LEVEL = 2
+        const val FALLBACK_TEXTURE_PREFIX = "escom"
     }
 
     // ── Mapa ──────────────────────────────────────────────────────────
@@ -73,16 +74,16 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
     private fun getBuildingTexture(propiedad: Propiedad): Texture? {
         if (propiedad.nivel <= 0) return null
-        val level = propiedad.nivel.coerceAtLeast(1)
+        val level = propiedad.nivel
         propiedad.texturePrefix?.let { prefix ->
             for (candidateLevel in level downTo 1) {
                 loadBuildingTexture("${prefix}lvl$candidateLevel")?.let { return it }
             }
         }
         val fallbackLevel = level.coerceIn(1, MAX_FALLBACK_LEVEL)
-        val fallbackTexture = loadBuildingTexture("escomlvl$fallbackLevel")
+        val fallbackTexture = loadBuildingTexture("${FALLBACK_TEXTURE_PREFIX}lvl$fallbackLevel")
         if (fallbackTexture == null) {
-            Gdx.app.error("TEXTURE", "No se encontró textura para ${propiedad.id} (nivel $level), ni fallback escomlvl$fallbackLevel")
+            Gdx.app.error("TEXTURE", "No se encontró textura para ${propiedad.id} (nivel $level), ni fallback ${FALLBACK_TEXTURE_PREFIX}lvl$fallbackLevel")
         }
         return fallbackTexture
     }
