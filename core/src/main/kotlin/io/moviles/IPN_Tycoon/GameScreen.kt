@@ -3,6 +3,7 @@ package io.moviles.IPN_Tycoon
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -17,6 +18,8 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
@@ -25,24 +28,67 @@ import ktx.assets.toInternalFile
 import ktx.scene2d.Scene2DSkin
 
 class GameScreen(game: Main) : BaseScreen(game) {
+    private companion object {
+        const val MAX_FALLBACK_LEVEL = 2
+        const val FALLBACK_TEXTURE_PREFIX = "escom"
+    }
+
+    // ── Mapa ──────────────────────────────────────────────────────────
     private val map: TiledMap? by lazy {
-        try { TmxMapLoader().load("Mapa/Mapa_General.tmx") } catch (e: Exception) { null }
+        try {
+            TmxMapLoader().load("Mapa/Mapa_General.tmx")
+        } catch (e: Exception) {
+            Gdx.app.error("MAP_ERROR", "Error cargando Mapa_General.tmx: ${e.message}")
+            null
+        }
     }
     private val renderer by lazy { map?.let { IsometricTiledMapRenderer(it) } }
 
+    // ── Cámara ────────────────────────────────────────────────────────
     private val camera = OrthographicCamera().apply {
         setToOrtho(false, 800f, 480f)
         zoom = 8f
-        // Posición de cámara inicial
         position.set(-436f, 1360f, 0f)
     }
     private var initialZoom = 8f
 
-    private val escomTexture by lazy {
-        val file = "Mapa/Edificios/ESCOMmini.png".toInternalFile()
-        if (file.exists()) Texture(file) else null
+    // ── Caché de texturas de edificios ────────────────────────────────
+    /**
+     * Clave: "${texturePrefix}lvl${nivel}"
+     * Ej.: "escomlvl1", "escomlvl2"
+     * El valor puede ser null si el archivo no existe todavía.
+     */
+    private val buildingTextureCache = mutableMapOf<String, Texture?>()
+
+    private fun loadBuildingTexture(key: String): Texture? {
+        return buildingTextureCache.getOrPut(key) {
+            val path = "Mapa/Edificios/$key.png"
+            val file = path.toInternalFile()
+            if (file.exists()) {
+                Texture(file)
+            } else {
+                null
+            }
+        }
     }
 
+    private fun getBuildingTexture(propiedad: Propiedad): Texture? {
+        if (propiedad.nivel <= 0) return null
+        val level = propiedad.nivel
+        propiedad.texturePrefix?.let { prefix ->
+            for (candidateLevel in level downTo 1) {
+                loadBuildingTexture("${prefix}lvl$candidateLevel")?.let { return it }
+            }
+        }
+        val fallbackLevel = level.coerceIn(1, MAX_FALLBACK_LEVEL)
+        val fallbackTexture = loadBuildingTexture("${FALLBACK_TEXTURE_PREFIX}lvl$fallbackLevel")
+        if (fallbackTexture == null) {
+            Gdx.app.error("TEXTURE", "No se encontró textura para ${propiedad.id} (nivel $level), ni fallback ${FALLBACK_TEXTURE_PREFIX}lvl$fallbackLevel")
+        }
+        return fallbackTexture
+    }
+
+    // ── Diálogo de intro ──────────────────────────────────────────────
     private var dialogoActor: DialogoActor? = null
     private val backgroundTexture: Texture by lazy {
         Texture("background.png".toInternalFile()).apply {
@@ -50,14 +96,18 @@ class GameScreen(game: Main) : BaseScreen(game) {
         }
     }
     private var backgroundImage: Image? = null
-    private var nombreJugador: String = ""
-    private var nombreEscuela: String = ""
+    private var nombreJugador: String  = ""
+    private var nombreEscuela: String  = ""
+
+    // ── HUD ───────────────────────────────────────────────────────────
+    private var moneyLabel: Label? = null
 
     var modoCarga: Boolean = false
 
+    // ─────────────────────────────────────────────────────────────────
     override fun show() {
         super.show()
-        val skin = Scene2DSkin.defaultSkin
+        val skin   = Scene2DSkin.defaultSkin
         val fuente = skin.getFont("default-font")
 
         if (dialogoActor == null) {
@@ -75,6 +125,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
         }
 
         stage.clear()
+        stage.clearListeners()
 
         stage.addListener(object : InputListener() {
             override fun keyDown(event: InputEvent?, keycode: Int): Boolean {
@@ -95,7 +146,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
             backgroundImage?.let { stage.addActor(it) }
             dialogoActor?.let {
                 stage.addActor(it)
-                it.width = stage.width
+                it.width  = stage.width
                 it.height = stage.height
 
                 it.alTerminarNombre = { nombre ->
@@ -111,15 +162,15 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 }
 
                 it.mostrarConversacion(listOf(
-                    Dialogo("?????", "¡Hola! Soy el Ing. Lázaro Cárdenas.", "sprite_saludando.png"),
-                    Dialogo("Ing. Cárdenas", "Bienvenido a EDU-TYCOON. Aquí podrás crear tu propia institución educativa, tal como lo hice yo.", "sprite_apenado.png"),
-                    Dialogo("Ing. Cárdenas", "¿Y por qué no? Llegar a construir un ¡¡IMPERIO EDUCATIVO!!", "sprite_explicando.png"),
-                    Dialogo("Ing. Cárdenas", "Pero antes que nada, empecemos por lo básico....", "sprite_serio.png"),
-                    Dialogo("Ing. Cárdenas", "¿Cuál es tu nombre?", "sprite_hablando.png", TipoDialogo.INPUT),
-                    Dialogo("Ing. Cárdenas", "¡Un gusto conocerte {nombre}! Prepárate para el resto.", "sprite_saludando.png"),
-                    Dialogo("Ing. Cárdenas", "Tener un buen nombre para tu institución lo es todo.", "sprite_serio.png"),
-                    Dialogo("Ing. Cárdenas", "Así que dime, ¿qué nombre llevará?", "sprite_hablando.png", TipoDialogo.INPUT),
-                    Dialogo("Ing. Cárdenas", "¿{escuela}? Suena genial", "sprite_explicando.png")
+                    Dialogo("?????",          "¡Hola! Soy el Ing. Lázaro Cárdenas.",                                          "sprite_saludando.png"),
+                    Dialogo("Ing. Cárdenas",  "Bienvenido a EDU-TYCOON. Aquí podrás crear tu propia institución educativa.",    "sprite_apenado.png"),
+                    Dialogo("Ing. Cárdenas",  "¿Y por qué no? Llegar a construir un ¡¡IMPERIO EDUCATIVO!!",                    "sprite_explicando.png"),
+                    Dialogo("Ing. Cárdenas",  "Pero antes que nada, empecemos por lo básico....",                              "sprite_serio.png"),
+                    Dialogo("Ing. Cárdenas",  "¿Cuál es tu nombre?",                                                           "sprite_hablando.png", TipoDialogo.INPUT),
+                    Dialogo("Ing. Cárdenas",  "¡Un gusto conocerte {nombre}! Prepárate para el resto.",                        "sprite_saludando.png"),
+                    Dialogo("Ing. Cárdenas",  "Tener un buen nombre para tu institución lo es todo.",                          "sprite_serio.png"),
+                    Dialogo("Ing. Cárdenas",  "Así que dime, ¿qué nombre llevará?",                                            "sprite_hablando.png", TipoDialogo.INPUT),
+                    Dialogo("Ing. Cárdenas",  "¿{escuela}? Suena genial",                                                      "sprite_explicando.png")
                 ))
             }
 
@@ -127,7 +178,12 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 override fun clicked(event: InputEvent?, x: Float, y: Float) {
                     dialogoActor?.let {
                         if (it.isVisible) it.avanzar()
-                        else { modoCarga = true; configurarControlesMapa() }
+                        else {
+                            Gdx.app.postRunnable { stage.removeListener(this) }
+                            modoCarga = true
+                            backgroundImage?.remove()
+                            configurarControlesMapa()
+                        }
                     }
                 }
             })
@@ -138,11 +194,13 @@ class GameScreen(game: Main) : BaseScreen(game) {
         Gdx.input.setCatchKey(Input.Keys.BACK, true)
     }
 
+    // ── Controles del mapa + HUD ──────────────────────────────────────
     private fun configurarControlesMapa() {
         val multiplexer = InputMultiplexer()
         multiplexer.addProcessor(stage)
 
         val gestureDetector = GestureDetector(object : GestureAdapter() {
+
             override fun tap(x: Float, y: Float, count: Int, button: Int): Boolean {
                 if (dialogoActor?.isVisible == true) return false
                 val m = map ?: return false
@@ -150,27 +208,25 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 val worldTouch = Vector3(x, y, 0f)
                 camera.unproject(worldTouch)
 
-                // Lógica de coordenadas: Mundo -> Tiled
-                val tileWidth = 64f
+                val tileWidth  = 64f
                 val tileHeight = 32f
-
-                val tiledX = (worldTouch.x / (tileWidth / 2f) - worldTouch.y / (tileHeight / 2f)) / 2f * tileHeight
-                val tiledY = (worldTouch.y / (tileHeight / 2f) + worldTouch.x / (tileWidth / 2f)) / 2f * tileHeight
+                val tiledX = (worldTouch.x / (tileWidth  / 2f) - worldTouch.y / (tileHeight / 2f)) / 2f * tileHeight
+                val tiledY = (worldTouch.y / (tileHeight / 2f) + worldTouch.x / (tileWidth  / 2f)) / 2f * tileHeight
 
                 try {
                     val logicaLayer = m.layers["Logica_Clics"] ?: return false
                     logicaLayer.objects.filterIsInstance<RectangleMapObject>().forEach { obj ->
                         if (obj.rectangle.contains(tiledX, tiledY)) {
-                            val propiedad = PropiedadRepository.getPropiedad(obj.name ?: "")
-                            if (propiedad != null) {
-                                BuildingInfoWindow(propiedad) {
-                                    Gdx.app.log("GAME", "Mejorando...")
-                                }.show(stage)
-                                return true
-                            }
+                            val propiedad = PropiedadRepository.getPropiedad(obj.name ?: "") ?: return false
+                            BuildingInfoWindow(propiedad) {
+                                // Callback: el edificio cambió de estado → nada más que hacer,
+                                // render() ya leerá propiedad.nivel en el siguiente frame.
+                                Gdx.app.log("GAME", "${propiedad.nombre} → nivel ${propiedad.nivel}")
+                            }.show(stage)
+                            return true
                         }
                     }
-                } catch (e: Exception) {}
+                } catch (_: Exception) {}
                 return false
             }
 
@@ -190,10 +246,40 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
         multiplexer.addProcessor(gestureDetector)
         Gdx.input.inputProcessor = multiplexer
+
+        // ── HUD de dinero ─────────────────────────────────────────────
+        setupHUD()
     }
 
+    /**
+     * Crea la etiqueta de dinero en la esquina superior izquierda.
+     * Se llama una sola vez al entrar al mapa.
+     */
+    private fun setupHUD() {
+        val skin = Scene2DSkin.defaultSkin
+
+        val labelStyle = Label.LabelStyle(skin.getFont("default-font"), Color.GOLD)
+        moneyLabel = Label(formatMoney(GameState.dinero), labelStyle).apply {
+            setFontScale(1.1f)
+        }
+
+        val hudTable = Table().apply {
+            setFillParent(true)
+            top().left()
+            pad(12f)
+            // Fondo semitransparente para legibilidad
+            background = skin.newDrawable("white", Color(0f, 0f, 0f, 0.45f))
+            add(Label("$  ", labelStyle))   // ícono moneda (texto)
+            add(moneyLabel)
+        }
+
+        stage.addActor(hudTable)
+    }
+
+    // ── Render ────────────────────────────────────────────────────────
     override fun render(delta: Float) {
         clearScreen(0f, 0f, 0f, 1f)
+
         if (modoCarga) {
             val r = renderer ?: return
             camera.update()
@@ -203,39 +289,60 @@ class GameScreen(game: Main) : BaseScreen(game) {
             r.batch.begin()
             try {
                 val m = map ?: return
-                // Aplicamos la inversa de la lógica de clics para posicionar los edificios
-                m.layers["Puntos_origen"]?.objects?.filterIsInstance<PointMapObject>()?.forEach { obj ->
-                    // Transformación inversa exacta: Tiled -> Mundo
-                    // worldX = tiledX + tiledY
-                    // worldY = (tiledY - tiledX) / 2
-                    val worldX = obj.point.x + obj.point.y
-                    val worldY = (obj.point.y - obj.point.x) * 0.5f
+                m.layers["Puntos_origen"]
+                    ?.objects
+                    ?.filterIsInstance<PointMapObject>()
+                    ?.forEach { obj ->
+                        // Sólo renderizamos si el edificio fue comprado
+                        val propiedad = PropiedadRepository.getPropiedad(obj.name ?: "") ?: return@forEach
+                        if (!propiedad.comprada) return@forEach
 
-                    // Dimensiones visuales del edificio
-                    val w = 3728f
-                    val h = 1968f
+                        val texture = getBuildingTexture(propiedad) ?: return@forEach
 
-                    // Dibujamos centrando horizontalmente y usando el punto como base inferior (suelo)
-                    escomTexture?.let { r.batch.draw(it, worldX - (w / 2f), worldY, w, h) }
-                }
-            } catch (ignore: Exception) {}
+                        // Conversión de coordenadas isométricas → mundo
+                        val worldX = obj.point.x + obj.point.y
+                        val worldY = (obj.point.y - obj.point.x) * 0.5f
+
+                        r.batch.draw(
+                            texture,
+                            worldX - (propiedad.renderW / 2f),
+                            worldY,
+                            propiedad.renderW,
+                            propiedad.renderH
+                        )
+                    }
+            } catch (_: Exception) {}
             r.batch.end()
+
+            // Actualizar HUD de dinero en cada frame
+            moneyLabel?.setText(formatMoney(GameState.dinero))
         }
+
         stage.act(delta)
         stage.draw()
     }
 
+    // ── Resize ────────────────────────────────────────────────────────
     override fun resize(width: Int, height: Int) {
         super.resize(width, height)
-        camera.viewportWidth = width.toFloat()
+        camera.viewportWidth  = width.toFloat()
         camera.viewportHeight = height.toFloat()
         camera.update()
     }
 
+    // ── Dispose ───────────────────────────────────────────────────────
     override fun dispose() {
         super.dispose()
         backgroundTexture.dispose()
-        escomTexture?.dispose()
+        buildingTextureCache.values.forEach { it?.dispose() }
+        buildingTextureCache.clear()
         map?.dispose()
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────
+    private fun formatMoney(amount: Long): String = when {
+        amount >= 1_000_000L -> "${"%.1f".format(amount / 1_000_000.0)}M"
+        amount >= 1_000L     -> "${"%.0f".format(amount / 1_000.0)}K"
+        else                 -> amount.toString()
     }
 }
