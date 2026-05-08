@@ -3,6 +3,7 @@ package io.moviles.IPN_Tycoon
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -13,34 +14,49 @@ import com.badlogic.gdx.maps.objects.RectangleMapObject
 import com.badlogic.gdx.maps.tiled.TiledMap
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.InputListener
 import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.Scaling
 import ktx.app.clearScreen
 import ktx.assets.toInternalFile
-import ktx.scene2d.Scene2DSkin
+import ktx.scene2d.*
+import java.util.Locale
 
 class GameScreen(game: Main) : BaseScreen(game) {
+    private val viewModel = GameViewModel()
+
     private val map: TiledMap? by lazy {
-        try { TmxMapLoader().load("Mapa/Mapa_General.tmx") } catch (e: Exception) { null }
+        try { TmxMapLoader().load("Mapa/Mapa_General.tmx") } catch (_: Exception) { null }
     }
     private val renderer by lazy { map?.let { IsometricTiledMapRenderer(it) } }
 
     private val camera = OrthographicCamera().apply {
         setToOrtho(false, 800f, 480f)
         zoom = 8f
-        // Posición de cámara inicial
         position.set(-436f, 1360f, 0f)
     }
     private var initialZoom = 8f
 
+    // --- OPTIMIZACIÓN: Caché de Texturas y Posiciones ---
     private val escomTexture by lazy {
         val file = "Mapa/Edificios/ESCOMmini.png".toInternalFile()
         if (file.exists()) Texture(file) else null
+    }
+    private val dialogueTextureCache = mutableMapOf<String, Texture>()
+    private val edificiosPosiciones by lazy {
+        val lista = mutableListOf<Vector2>()
+        map?.layers?.get("Puntos_origen")?.objects?.filterIsInstance<PointMapObject>()?.forEach { obj ->
+            val worldX = obj.point.x + obj.point.y
+            val worldY = (obj.point.y - obj.point.x) * 0.5f
+            lista.add(Vector2(worldX, worldY))
+        }
+        lista
     }
 
     private var dialogoActor: DialogoActor? = null
@@ -50,10 +66,19 @@ class GameScreen(game: Main) : BaseScreen(game) {
         }
     }
     private var backgroundImage: Image? = null
+
+    // UI Elements (HUD)
+    private lateinit var labelDinero: Label
+    private lateinit var labelNivel: Label
+    private lateinit var labelPopularidad: Label
+
     private var nombreJugador: String = ""
     private var nombreEscuela: String = ""
-
     var modoCarga: Boolean = false
+
+    // Estilos IPN
+    private val colorGuinda = Color.valueOf("660000")
+    private val colorOro = Color.valueOf("D4AF37")
 
     override fun show() {
         super.show()
@@ -62,14 +87,19 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
         if (dialogoActor == null) {
             dialogoActor = DialogoActor(fuente) { path ->
-                TextureRegion(Texture(path.toInternalFile()))
+                val texture = dialogueTextureCache.getOrPut(path) {
+                    Texture(path.toInternalFile()).apply {
+                        setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
+                    }
+                }
+                TextureRegion(texture)
             }
         }
 
         if (backgroundImage == null) {
             backgroundImage = Image(backgroundTexture).apply {
                 setScaling(Scaling.fit)
-                setAlign(Align.center)
+                align = Align.center
             }
             backgroundImage?.setFillParent(true)
         }
@@ -101,13 +131,11 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 it.alTerminarNombre = { nombre ->
                     nombreJugador = nombre
                     it.variables["nombre"] = nombre
-                    Gdx.app.log("GAME", "Nombre guardado: $nombreJugador")
                 }
 
                 it.alTerminarEscuela = { escuela ->
                     nombreEscuela = escuela
                     it.variables["escuela"] = escuela
-                    Gdx.app.log("GAME", "Escuela guardada: $nombreEscuela")
                 }
 
                 it.mostrarConversacion(listOf(
@@ -127,18 +155,120 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 override fun clicked(event: InputEvent?, x: Float, y: Float) {
                     dialogoActor?.let {
                         if (it.isVisible) it.avanzar()
-                        else { modoCarga = true; configurarControlesMapa() }
+                        else {
+                            modoCarga = true
+                            crearHUD()
+                            configurarControlesMapa()
+                        }
                     }
                 }
             })
             Gdx.input.inputProcessor = stage
         } else {
+            crearHUD()
             configurarControlesMapa()
         }
         Gdx.input.setCatchKey(Input.Keys.BACK, true)
     }
 
-    private fun configurarControlesMapa() {
+    private fun crearHUD() {
+        val skin = Scene2DSkin.defaultSkin
+
+        // Colores con profundidad
+        val guindaTransparente = Color(0.4f, 0f, 0f, 0.92f)
+        val colorBrillo = Color(1f, 1f, 1f, 0.15f)
+        val colorSombra = Color(0f, 0f, 0f, 0.5f)
+
+        val fondoGuinda = skin.newDrawable("white", guindaTransparente)
+        val fondoOro = skin.newDrawable("white", colorOro)
+        val fondoBrillo = skin.newDrawable("white", colorBrillo)
+        val fondoSombra = skin.newDrawable("white", colorSombra)
+
+        stage.addActor(scene2d.table {
+            setFillParent(true)
+            align(Align.top)
+
+            // --- BARRA SUPERIOR (CON VOLUMEN) ---
+            stack {
+                // 1. Sombra de la barra
+                table {
+                    align(Align.bottom)
+                    image(fondoSombra).cell(fillX = true, height = 5f)
+                }
+
+                // 2. Fondo Principal Guinda
+                image(fondoGuinda)
+
+                // 3. Brillo Superior
+                table {
+                    align(Align.top)
+                    image(fondoBrillo).cell(fillX = true, height = 2f)
+                }
+
+                // 4. Línea inferior de acento (Oro)
+                table {
+                    align(Align.bottom)
+                    image(fondoOro).cell(fillX = true, height = 3f, padBottom = 2f)
+                }
+
+                // 5. Contenido de la Barra
+                table {
+                    table {
+                        label(if (nombreEscuela.isEmpty()) "MI INSTITUCIÓN" else nombreEscuela, "default") {
+                            color = colorOro
+                            setFontScale(1.25f)
+                        }.cell(align = Align.left)
+                        row()
+                        labelNivel = label("NIVEL: ${viewModel.nivel.value}", "default") {
+                            color = Color.LIGHT_GRAY
+                            setFontScale(0.85f)
+                        }
+                    }.cell(padLeft = 25f, expandX = true, align = Align.left)
+
+                    table {
+                        label("POPULARIDAD", "default") {
+                            color = Color.GRAY
+                            setFontScale(0.7f)
+                        }.cell(padBottom = 2f)
+                        row()
+                        labelPopularidad = label("${viewModel.popularidad.value}%", "default") { color = Color.WHITE }
+                    }.cell(expandX = true)
+
+                    table {
+                        labelDinero = label("$${String.format(Locale.US, "%,d", viewModel.dinero.value)}", "default") {
+                            color = Color.WHITE
+                            setFontScale(1.4f)
+                        }
+                    }.cell(padRight = 25f, expandX = true, align = Align.right)
+                }
+            }.cell(expandX = true, fillX = true, height = 85f)
+
+            row()
+
+            // --- BOTONES LATERALES (CON SOMBRA) ---
+            table {
+                stack {
+                    image(fondoSombra).apply {
+                        color.a = 0.3f
+                        // Simulamos el desplazamiento de la sombra manualmente
+                        setScale(1.02f)
+                    }
+                    textButton("TIENDA", "default") { color = colorGuinda }
+                }.cell(padBottom = 12f, width = 140f, height = 55f)
+                row()
+                stack {
+                    image(fondoSombra).apply { color.a = 0.3f }
+                    textButton("MISIONES", "default") { color = colorGuinda }
+                }.cell(padBottom = 12f, width = 140f, height = 55f)
+                row()
+                stack {
+                    image(fondoSombra).apply { color.a = 0.3f }
+                    textButton("AJUSTES", "default") { color = Color.DARK_GRAY }
+                }.cell(width = 140f, height = 55f)
+            }.cell(expandX = true, expandY = true, align = Align.bottomRight, padRight = 20f, padBottom = 25f)
+        })
+    }
+  private fun configurarControlesMapa() {
         val multiplexer = InputMultiplexer()
         multiplexer.addProcessor(stage)
 
@@ -150,7 +280,6 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 val worldTouch = Vector3(x, y, 0f)
                 camera.unproject(worldTouch)
 
-                // Lógica de coordenadas: Mundo -> Tiled
                 val tileWidth = 64f
                 val tileHeight = 32f
 
@@ -170,7 +299,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
                             }
                         }
                     }
-                } catch (e: Exception) {}
+                } catch (_: Exception) {}
                 return false
             }
 
@@ -195,30 +324,25 @@ class GameScreen(game: Main) : BaseScreen(game) {
     override fun render(delta: Float) {
         clearScreen(0f, 0f, 0f, 1f)
         if (modoCarga) {
+            if (::labelDinero.isInitialized) {
+                labelDinero.setText("$${String.format(Locale.US, "%,d", viewModel.dinero.value)}")
+                labelNivel.setText("Nivel: ${viewModel.nivel.value}")
+                labelPopularidad.setText("${viewModel.popularidad.value}%")
+            }
+
             val r = renderer ?: return
             camera.update()
             r.setView(camera)
             r.render()
 
             r.batch.begin()
-            try {
-                val m = map ?: return
-                // Aplicamos la inversa de la lógica de clics para posicionar los edificios
-                m.layers["Puntos_origen"]?.objects?.filterIsInstance<PointMapObject>()?.forEach { obj ->
-                    // Transformación inversa exacta: Tiled -> Mundo
-                    // worldX = tiledX + tiledY
-                    // worldY = (tiledY - tiledX) / 2
-                    val worldX = obj.point.x + obj.point.y
-                    val worldY = (obj.point.y - obj.point.x) * 0.5f
-
-                    // Dimensiones visuales del edificio
-                    val w = 3728f
-                    val h = 1968f
-
-                    // Dibujamos centrando horizontalmente y usando el punto como base inferior (suelo)
-                    escomTexture?.let { r.batch.draw(it, worldX - (w / 2f), worldY, w, h) }
+            val w = 3728f
+            val h = 1968f
+            escomTexture?.let { tex ->
+                edificiosPosiciones.forEach { pos ->
+                    r.batch.draw(tex, pos.x - (w / 2f), pos.y, w, h)
                 }
-            } catch (ignore: Exception) {}
+            }
             r.batch.end()
         }
         stage.act(delta)
@@ -236,6 +360,9 @@ class GameScreen(game: Main) : BaseScreen(game) {
         super.dispose()
         backgroundTexture.dispose()
         escomTexture?.dispose()
+        dialogueTextureCache.values.forEach { it.dispose() }
+        dialogueTextureCache.clear()
+        dialogoActor?.dispose()
         map?.dispose()
     }
 }

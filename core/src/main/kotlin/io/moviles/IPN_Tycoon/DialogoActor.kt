@@ -14,7 +14,7 @@ import com.badlogic.gdx.utils.Align
 import ktx.scene2d.Scene2DSkin
 
 class DialogoActor(
-    private val font: BitmapFont,
+    font: BitmapFont,
     private val textureManager: (String) -> TextureRegion
 ) : Group() {
 
@@ -134,7 +134,7 @@ class DialogoActor(
         try {
             val region = textureManager(actual.spritePath)
             imagenPersonaje.drawable = TextureRegionDrawable(region)
-        } catch (e: Exception) {}
+        } catch (_: Exception) {}
 
         labelNombre.setText(actual.nombre)
 
@@ -218,5 +218,9 @@ class DialogoActor(
             return true
         }
         return false
+    }
+
+    fun dispose() {
+        whiteRegion.texture.dispose()
     }
 }
