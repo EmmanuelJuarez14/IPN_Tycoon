@@ -6,7 +6,7 @@ package io.moviles.IPN_Tycoon
  * a través de EconomyEngine / GameCycleEngine.
  */
 object GameState {
-    private const val DINERO_INICIAL: Long = 500_000L
+    private const val DINERO_INICIAL: Long = 1_500_000L
     var dinero: Long = DINERO_INICIAL   // Saldo inicial
 
     fun reset() {

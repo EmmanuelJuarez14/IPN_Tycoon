@@ -219,4 +219,13 @@ class DialogoActor(
         }
         return false
     }
+
+    fun dispose() {
+        // Solo intentamos disponer si la textura fue creada (lazy)
+        // Pero TextureRegion no tiene forma directa de saber si su textura subyacente es la de whiteRegion
+        // así que lo manejamos con cuidado.
+        try {
+            whiteRegion.texture.dispose()
+        } catch (_: Exception) {}
+    }
 }
