@@ -11,7 +11,7 @@ object GameState {
     var musicaActiva: Boolean = true
 
     // ── Economía ──────────────────────────────────────────────────────
-    private const val DINERO_INICIAL: Long = 1_500_000L
+    private const val DINERO_INICIAL: Long = 100_500_000L
     var dinero: Long = DINERO_INICIAL
 
     // ── API de dinero ─────────────────────────────────────────────────

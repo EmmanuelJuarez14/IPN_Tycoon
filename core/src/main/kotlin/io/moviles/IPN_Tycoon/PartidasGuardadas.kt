@@ -20,8 +20,8 @@ import java.util.*
 
 class PartidasGuardadas(game: Main) : BaseScreen(game) {
 
-    private var pixelFont: BitmapFont? = null
-    private var smallFont: BitmapFont? = null
+    private var titleFont: BitmapFont? = null
+    private var infoFont: BitmapFont? = null
 
     private val backgroundTexture: Texture by lazy {
         Texture("partidasguardadas.png".toInternalFile()).apply {
@@ -38,11 +38,9 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
         Texture(pixmap).apply { setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest) }
     }
 
-    // Datos de los slots — null = vacío
     private var saveSlot1: GameSaveData? = null
     private var saveSlot2: GameSaveData? = null
 
-    // ── Fonts ─────────────────────────────────────────────────────────
     private fun generateFont(size: Int): BitmapFont {
         val fontFile = "font.ttf".toInternalFile()
         return if (fontFile.exists()) {
@@ -50,7 +48,7 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
             val param = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
                 this.size   = size
                 color       = Color.WHITE
-                borderWidth = 2f
+                borderWidth = 1.5f
                 borderColor = Color.valueOf("3e3e54")
                 minFilter   = Texture.TextureFilter.Nearest
                 magFilter   = Texture.TextureFilter.Nearest
@@ -61,36 +59,49 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
         } else BitmapFont().apply { data.setScale(size / 15f) }
     }
 
-    // ── Show ──────────────────────────────────────────────────────────
     override fun show() {
         super.show()
-        pixelFont = generateFont(22)
-        smallFont = generateFont(14)
-        buildUI()     // primera pasada: slots vacíos
-        loadSlots()   // consulta Room → llama buildUI() de nuevo con datos reales
+        titleFont = generateFont(16)
+        infoFont  = generateFont(12)
+        loadSlots()
     }
 
-    // ── Carga slots de Room ───────────────────────────────────────────
     private fun loadSlots() {
         game.saveManager.cargarSlots { s1, s2 ->
             saveSlot1 = s1
             saveSlot2 = s2
-            buildUI()  // reconstruye con datos reales
+            buildUI()
         }
     }
 
-    // ── Construye la UI completa (usa saveSlot1/2 directamente) ───────
     private fun buildUI() {
         stage.clear()
 
         val drawable = NinePatchDrawable(NinePatch(buttonTexture, 4, 4, 4, 4))
+
         val btnStyle = TextButtonStyle().apply {
-            font = pixelFont
+            font = titleFont
             up   = drawable
             over = drawable.tint(Color.valueOf("d1e8b2"))
             down = drawable.tint(Color.valueOf("a0a0a0"))
         }
-        val smallStyle = Label.LabelStyle(smallFont, Color.WHITE)
+
+        val borrarStyle = TextButtonStyle().apply {
+            font = infoFont
+            up   = drawable.tint(Color.valueOf("cc4444"))
+            over = drawable.tint(Color.valueOf("ee6666"))
+            down = drawable.tint(Color.valueOf("aa2222"))
+        }
+
+        val volverFont = generateFont(18) // Revertido a 18
+        val volverStyle = TextButtonStyle().apply {
+            font = volverFont
+            up   = drawable
+            over = drawable.tint(Color.valueOf("d1e8b2"))
+            down = drawable.tint(Color.valueOf("a0a0a0"))
+        }
+
+        val infoStyle = Label.LabelStyle(infoFont, Color.WHITE)
 
         stage.actors {
             stack {
@@ -104,70 +115,72 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
                 table {
                     setFillParent(true)
                     center()
-                    pad(20f)
-
-                    label("PARTIDAS GUARDADAS") {
-                        setFontScale(1.1f)
-                        setAlignment(Align.center)
-                    }.cell(colspan = 5, padBottom = 30f)
-
-                    row()
+                    pad(16f)
 
                     // ── Slot 1 ────────────────────────────────────────
-                    addSlot(this, 1, saveSlot1, btnStyle, smallStyle)
-                    label("").cell(width = 20f)
+                    addSlot(this, 1, saveSlot1, btnStyle, infoStyle, borrarStyle)
+                    label("").cell(width = 14f)
 
                     // ── Slot 2 ────────────────────────────────────────
-                    addSlot(this, 2, saveSlot2, btnStyle, smallStyle)
-                    label("").cell(width = 20f)
+                    addSlot(this, 2, saveSlot2, btnStyle, infoStyle, borrarStyle)
+                    label("").cell(width = 14f)
 
                     // ── Slot 3 TESTING ────────────────────────────────
-                    addSlot(this, 3, null, btnStyle, smallStyle)
+                    addSlot(this, 3, null, btnStyle, infoStyle, borrarStyle)
 
                     row()
 
                     textButton("← VOLVER") {
-                        style = btnStyle
+                        style = volverStyle
                         onChange { game.setScreen<SeleccionPartida>() }
-                    }.cell(colspan = 5, padTop = 25f, width = 220f, height = 60f)
+                    }.cell(colspan = 5, padTop = 30f, width = 240f, height = 65f) // Revertido a 240x65
                 }
             }
         }
     }
 
-    /**
-     * Añade un slot de partida al table.
-     * [slotNum] 1, 2 = real  |  3 = testing
-     */
     private fun addSlot(
         table: KTableWidget,
         slotNum: Int,
         data: GameSaveData?,
         btnStyle: TextButtonStyle,
-        smallStyle: Label.LabelStyle
+        infoStyle: Label.LabelStyle,
+        borrarStyle: TextButtonStyle
     ) {
-        table.table {
-            // Capturamos el slot en una val local para el lambda
-            val slot = slotNum
-            val saveData = data
+        val slotWidth  = 230f
+        val slotHeight = 120f
 
-            textButton(slotTitle(slot, saveData)) {
+        table.table {
+            textButton(slotTitle(slotNum, data)) {
                 style = btnStyle
-                onChange { onSlotClicked(slot) }
-            }.cell(width = 200f, height = 130f)
+                label.setWrap(true)
+                label.setAlignment(Align.center)
+                onChange { onSlotClicked(slotNum) }
+            }.cell(width = slotWidth, height = slotHeight)
 
             row()
 
-            label(slotSubtitle(slot, saveData)) {
-                style = smallStyle
+            label(slotSubtitle(slotNum, data)) {
+                style = infoStyle
                 setAlignment(Align.center)
                 wrap = true
-            }.cell(width = 200f, padTop = 6f)
+            }.cell(width = slotWidth, padTop = 5f)
 
+            // Botón de eliminar si hay datos (excepto slot 3 test)
+            if (data != null && slotNum != 3) {
+                row()
+                textButton("ELIMINAR") {
+                    style = borrarStyle
+                    onChange {
+                        game.saveManager.eliminarSlot(slotNum) {
+                            loadSlots()
+                        }
+                    }
+                }.cell(width = slotWidth * 0.7f, height = 30f, padTop = 10f)
+            }
         }
     }
 
-    // ── Lógica de clic ────────────────────────────────────────────────
     private fun onSlotClicked(slotNum: Int) {
         val gameScreen = game.getScreen<GameScreen>()
 
@@ -177,8 +190,7 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
                     if (ok) { gameScreen.modoCarga = true; game.setScreen<GameScreen>() }
                 }
             } else {
-                GameState.reset()
-                GameState.slotActual = 1
+                GameState.reset(); GameState.slotActual = 1
                 PropiedadRepository.resetProgress()
                 gameScreen.modoCarga = false
                 game.setScreen<GameScreen>()
@@ -189,14 +201,12 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
                     if (ok) { gameScreen.modoCarga = true; game.setScreen<GameScreen>() }
                 }
             } else {
-                GameState.reset()
-                GameState.slotActual = 2
+                GameState.reset(); GameState.slotActual = 2
                 PropiedadRepository.resetProgress()
                 gameScreen.modoCarga = false
                 game.setScreen<GameScreen>()
             }
 
-            // Slot 3: testing — carga mapa directo sin Room ni diálogos
             3 -> {
                 GameState.slotActual = 3
                 gameScreen.modoCarga = true
@@ -205,7 +215,6 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
         }
     }
 
-    // ── Helpers de texto ─────────────────────────────────────────────
     private fun slotTitle(slotNum: Int, data: GameSaveData?): String = when {
         slotNum == 3 -> "TEST\nMapa directo"
         data != null -> data.nombreEscuela.ifBlank { "Partida $slotNum" }
@@ -213,12 +222,12 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
     }
 
     private fun slotSubtitle(slotNum: Int, data: GameSaveData?): String = when {
-        slotNum == 3 -> "Carga el mapa\nsin diálogos"
-        data == null -> "Slot $slotNum vacío"
+        slotNum == 3 -> "Carga el mapa\nsin dialogos"
+        data == null -> "Slot $slotNum vacio"
         else -> {
             val fecha = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
                 .format(Date(data.fechaGuardado))
-            "${data.nombreJugador}\n\$${fmt(data.dinero)}\nCiclos: ${data.ciclosJugados}\n$fecha"
+            "${data.nombreJugador}\n$${fmt(data.dinero)}\nCiclos: ${data.ciclosJugados}\n$fecha"
         }
     }
 
@@ -228,7 +237,6 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
         else            -> v.toString()
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────
     override fun render(delta: Float) {
         clearScreen(0f, 0f, 0f, 1f)
         stage.act(delta)
@@ -239,7 +247,7 @@ class PartidasGuardadas(game: Main) : BaseScreen(game) {
         super.dispose()
         backgroundTexture.dispose()
         buttonTexture.dispose()
-        pixelFont?.dispose()
-        smallFont?.dispose()
+        titleFont?.dispose()
+        infoFont?.dispose()
     }
 }

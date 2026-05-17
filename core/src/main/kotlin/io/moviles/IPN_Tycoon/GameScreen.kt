@@ -32,10 +32,27 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
     // ── Mapa ──────────────────────────────────────────────────────────
     private val map: TiledMap? by lazy {
-        try { TmxMapLoader().load("Mapa/Mapa_General.tmx") }
-        catch (e: Exception) { Gdx.app.error("MAP_ERROR", e.message); null }
+        try {
+            TmxMapLoader().load("Mapa/Mapa_General.tmx")
+        } catch (e: Exception) {
+            Gdx.app.error("MAP_ERROR", "Error cargando mapa: ${e.message}")
+            null
+        }
     }
-    private val renderer by lazy { map?.let { IsometricTiledMapRenderer(it) } }
+    private val renderer: IsometricTiledMapRenderer? by lazy {
+        map?.let { IsometricTiledMapRenderer(it) }
+    }
+
+    /**
+     * Índices de capas a renderizar — excluye "Edificios" porque
+     * nosotros dibujamos los edificios dinámicamente según nivel/compra.
+     */
+    private val layerIndicesToRender: IntArray by lazy {
+        val m = map ?: return@lazy intArrayOf()
+        (0 until m.layers.count)
+            .filter { m.layers[it].name != "Edificios" }
+            .toIntArray()
+    }
 
     // ── Cámara ────────────────────────────────────────────────────────
     private val camera = OrthographicCamera().apply {
@@ -58,7 +75,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
         }
     }
 
-    // ── Diálogo de intro ──────────────────────────────────────────────
+    // ── Diálogo ───────────────────────────────────────────────────────
     private var dialogoActor: DialogoActor? = null
     private val backgroundTexture: Texture by lazy {
         Texture("background.png".toInternalFile()).apply {
@@ -67,27 +84,48 @@ class GameScreen(game: Main) : BaseScreen(game) {
     }
     private var backgroundImage: Image? = null
 
+    // ── Icono Menú ────────────────────────────────────────────────────
+    private val menuIconTexture: Texture by lazy {
+        Texture("menuicon.png".toInternalFile()).apply {
+            setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
+        }
+    }
+
     // ── HUD ───────────────────────────────────────────────────────────
     private var moneyLabel: Label? = null
 
-    // ── Modo ──────────────────────────────────────────────────────────
+    // ── Estado ────────────────────────────────────────────────────────
     var modoCarga: Boolean = false
 
-    // ── Mapa auxiliar punto → propiedad ──────────────────────────────
+    // ── Mapa auxiliar punto → propiedad ───────────────────────────────
     private val puntosAPropiedad = mapOf(
         "escom"          to "escom_hitbox",
         "escom_hitbox"   to "escom_hitbox",
         "Direccion"      to "Direccion",
+        "direccion"      to "Direccion",
+        "Mac_and_cheese" to "Mac_and_cheese",
+        "cafeteria"      to "cafeteria",
+        "Cafeteria"      to "cafeteria",
         "auditorio"      to "auditorio",
+        "Auditorio"      to "auditorio",
         "Arquitectura"   to "Arquitectura",
+        "arquitectura"   to "Arquitectura",
         "Biologicas"     to "Biologicas",
+        "biologicas"     to "Biologicas",
         "Bioquimica"     to "Bioquimica",
+        "bioquimica"     to "Bioquimica",
         "Matematicas"    to "Matematicas",
+        "matematicas"    to "Matematicas",
         "Edificio1"      to "Edificio1",
+        "edificio1"      to "Edificio1",
         "Edificio2"      to "Edificio2",
+        "edificio2"      to "Edificio2",
         "Museo"          to "Museo",
+        "museo"          to "Museo",
         "Turismo"        to "Turismo",
-        "Mac_and_cheese" to "Mac_and_cheese"
+        "turismo"        to "Turismo",
+        "Palapas"        to "Palapas",
+        "palapas"        to "Palapas"
     )
 
     // ─────────────────────────────────────────────────────────────────
@@ -104,14 +142,14 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
         if (backgroundImage == null) {
             backgroundImage = Image(backgroundTexture).apply {
-                setScaling(Scaling.fit); setAlign(Align.center)
+                setScaling(Scaling.fit)
+                setAlign(Align.center)
             }
             backgroundImage?.setFillParent(true)
         }
 
         stage.clear()
 
-        // Botón BACK del sistema
         stage.addListener(object : InputListener() {
             override fun keyDown(event: InputEvent?, keycode: Int): Boolean {
                 if (keycode == Input.Keys.BACK || keycode == Input.Keys.ESCAPE) {
@@ -134,7 +172,6 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 actor.width  = stage.width
                 actor.height = stage.height
 
-                // ── Guardar nombres en GameState al terminar cada input ──
                 actor.alTerminarNombre = { nombre ->
                     GameState.nombreJugador = nombre
                     actor.variables["nombre"] = nombre
@@ -160,10 +197,13 @@ class GameScreen(game: Main) : BaseScreen(game) {
             stage.addListener(object : ClickListener() {
                 override fun clicked(event: InputEvent?, x: Float, y: Float) {
                     dialogoActor?.let { actor ->
-                        if (actor.isVisible) actor.avanzar()
-                        else {
+                        if (actor.isVisible) {
+                            actor.avanzar()
+                        } else if (!modoCarga) {
                             modoCarga = true
                             backgroundImage?.remove()
+                            stage.root.clearListeners()
+                            reAgregarListenerBack()
                             configurarControlesMapa()
                         }
                     }
@@ -177,7 +217,19 @@ class GameScreen(game: Main) : BaseScreen(game) {
         Gdx.input.setCatchKey(Input.Keys.BACK, true)
     }
 
-    // ── Controles del mapa + HUD ──────────────────────────────────────
+    private fun reAgregarListenerBack() {
+        stage.addListener(object : InputListener() {
+            override fun keyDown(event: InputEvent?, keycode: Int): Boolean {
+                if (keycode == Input.Keys.BACK || keycode == Input.Keys.ESCAPE) {
+                    game.setScreen<SeleccionPartida>()
+                    return true
+                }
+                return false
+            }
+        })
+    }
+
+    // ── Controles ────────────────────────────────────────────────────
     private fun configurarControlesMapa() {
         val multiplexer = InputMultiplexer()
         multiplexer.addProcessor(stage)
@@ -185,9 +237,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
         val gestureDetector = GestureDetector(object : GestureAdapter() {
 
             override fun tap(x: Float, y: Float, count: Int, button: Int): Boolean {
-                if (dialogoActor?.isVisible == true) return false
                 val m = map ?: return false
-
                 val worldTouch = Vector3(x, y, 0f)
                 camera.unproject(worldTouch)
 
@@ -200,7 +250,9 @@ class GameScreen(game: Main) : BaseScreen(game) {
                     val logicaLayer = m.layers["Logica_Clics"] ?: return false
                     logicaLayer.objects.filterIsInstance<RectangleMapObject>().forEach { obj ->
                         if (obj.rectangle.contains(tiledX, tiledY)) {
-                            val propiedad = PropiedadRepository.getPropiedad(obj.name ?: "") ?: return false
+                            val rawName   = obj.name ?: ""
+                            val propId    = puntosAPropiedad[rawName] ?: rawName
+                            val propiedad = PropiedadRepository.getPropiedad(propId) ?: return false
                             BuildingInfoWindow(propiedad) {
                                 Gdx.app.log("GAME", "${propiedad.nombre} → nivel ${propiedad.nivel}")
                             }.show(stage)
@@ -231,7 +283,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
         setupHUD()
     }
 
-    // ── HUD: dinero + botón pausa ─────────────────────────────────────
+    // ── HUD ───────────────────────────────────────────────────────────
     private fun setupHUD() {
         val skin = Scene2DSkin.defaultSkin
         val labelStyle = Label.LabelStyle(skin.getFont("default-font"), Color.GOLD)
@@ -243,8 +295,6 @@ class GameScreen(game: Main) : BaseScreen(game) {
         val hudTable = Table().apply {
             setFillParent(true)
             top()
-
-            // Izquierda: dinero
             add(Table().apply {
                 background = skin.newDrawable("white", Color(0f, 0f, 0f, 0.45f))
                 pad(8f)
@@ -252,14 +302,19 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 add(moneyLabel)
             }).left().expandX().pad(10f)
 
-            // Derecha: botón pausa
-            add(scene2d.textButton("⚙") {
-                onChange {
-                    PauseMenuWindow(game) {
-                        game.setScreen<SeleccionPartida>()
-                    }.show(stage)
-                }
-            }).right().pad(10f)
+            // Icono de menú puro (solo imagen, sin fondo, 38x38)
+            add(scene2d.image(menuIconTexture) {
+                setScaling(Scaling.fit)
+                setAlign(Align.center)
+                addListener(object : ClickListener() {
+                    override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                        PauseMenuWindow(game) {
+                            modoCarga = false
+                            game.setScreen<SeleccionPartida>()
+                        }.show(stage)
+                    }
+                })
+            }).right().pad(10f).size(80f)
         }
 
         stage.addActor(hudTable)
@@ -270,39 +325,46 @@ class GameScreen(game: Main) : BaseScreen(game) {
         clearScreen(0f, 0f, 0f, 1f)
 
         if (modoCarga) {
-            val r = renderer ?: return
-            camera.update()
-            r.setView(camera)
-            r.render()
+            renderer?.let { r ->
+                camera.update()
+                r.setView(camera)
 
-            r.batch.begin()
-            try {
-                map?.layers?.get("Puntos_origen")
-                    ?.objects?.filterIsInstance<PointMapObject>()
-                    ?.forEach { obj ->
-                        val propId    = puntosAPropiedad[obj.name ?: ""] ?: (obj.name ?: "")
-                        val propiedad = PropiedadRepository.getPropiedad(propId) ?: return@forEach
-                        if (!propiedad.comprada) return@forEach
+                // Renderiza todas las capas EXCEPTO "Edificios"
+                // (los edificios los dibujamos nosotros según nivel y compra)
+                r.render(layerIndicesToRender)
 
-                        val texture = getBuildingTexture(propiedad) ?: return@forEach
-                        val worldX  = obj.point.x + obj.point.y
-                        val worldY  = (obj.point.y - obj.point.x) * 0.5f
+                r.batch.begin()
+                try {
+                    map?.layers?.get("Puntos_origen")
+                        ?.objects?.filterIsInstance<PointMapObject>()
+                        ?.forEach { obj ->
+                            val rawName   = obj.name ?: ""
+                            val propId    = puntosAPropiedad[rawName] ?: rawName
+                            val propiedad = PropiedadRepository.getPropiedad(propId) ?: return@forEach
+                            if (!propiedad.comprada) return@forEach
 
-                        r.batch.draw(
-                            texture,
-                            worldX - (propiedad.renderW / 2f),
-                            worldY,
-                            propiedad.renderW,
-                            propiedad.renderH
-                        )
-                    }
-            } catch (_: Exception) {}
-            r.batch.end()
+                            val texture = getBuildingTexture(propiedad) ?: return@forEach
+                            val worldX  = obj.point.x + obj.point.y
+                            val worldY  = (obj.point.y - obj.point.x) * 0.5f
 
-            // Actualizar HUD
+                            r.batch.draw(
+                                texture,
+                                worldX - (propiedad.renderW / 2f),
+                                worldY,
+                                propiedad.renderW,
+                                propiedad.renderH
+                            )
+                        }
+                } catch (e: Exception) {
+                    Gdx.app.error("RENDER", "Error dibujando edificios: ${e.message}")
+                }
+                r.batch.end()
+            }
+
             moneyLabel?.setText(formatMoney(GameState.dinero))
         }
 
+        // Siempre se ejecuta
         stage.act(delta)
         stage.draw()
     }
@@ -318,6 +380,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
     override fun dispose() {
         super.dispose()
         backgroundTexture.dispose()
+        menuIconTexture.dispose()
         buildingTextureCache.values.forEach { it?.dispose() }
         buildingTextureCache.clear()
         map?.dispose()
