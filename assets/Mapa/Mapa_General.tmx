@@ -1,7 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.0" orientation="isometric" renderorder="right-down" width="500" height="500" tilewidth="64" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="41">
+<map version="1.10" tiledversion="1.12.0" orientation="isometric" renderorder="right-down" width="500" height="500" tilewidth="64" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="61">
  <tileset firstgid="1" source="calles/calles.tsx"/>
  <tileset firstgid="101" source="Edificio1Mini.tsx"/>
+ <tileset firstgid="102" name="palapas" tilewidth="2400" tileheight="1308" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/palapaslvl1.png" width="2400" height="1308"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="103" name="cafeteria" tilewidth="2400" tileheight="1340" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/cafeterialvl1.png" width="2400" height="1340"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="104" name="Biologicas" tilewidth="2400" tileheight="1340" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/Biologicaslvl1.png" width="2400" height="1340"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="105" name="Bioquimica" tilewidth="1024" tileheight="687" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/Bioquimicalvl1.png" width="1024" height="687"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="106" name="Edificio1" tilewidth="2048" tileheight="2048" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/Edificio1lvl1.png" width="2048" height="2048"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="107" name="Edificio2" tilewidth="2048" tileheight="2048" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/Edificio2lvl1.png" width="2048" height="2048"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="108" name="Direccion" tilewidth="2048" tileheight="2048" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/Direccionlvl1.png" width="2048" height="2048"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="109" name="auditorio" tilewidth="2048" tileheight="2048" tilecount="1" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="Edificios/auditoriolvl1.png" width="2048" height="2048"/>
+  </tile>
+ </tileset>
  <layer id="1" name="Capa 0" width="500" height="500" visible="0">
   <data encoding="base64" compression="zlib">
    eJztwwENAAAMw6DOv+kLOSSsmqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq+vIBLwDQvg==
@@ -14,28 +62,52 @@
  </layer>
  <objectgroup id="7" name="Logica_Clics">
   <object id="18" name="escom_hitbox" type="edificio_clickable" x="52" y="1452" width="2200" height="1672"/>
-  <object id="19" name="palapas" x="36" y="42" width="884" height="1244"/>
+  <object id="19" name="palapas" x="32" y="30" width="884" height="1244"/>
   <object id="20" name="cafeteria" x="1340" y="50" width="1072" height="752"/>
-  <object id="22" name="Direccion" x="3456" y="6848" width="3448" height="2792"/>
-  <object id="24" name="Mac_and_cheese" x="3584" y="9952" width="1728" height="2080"/>
+  <object id="22" name="Direccion" x="3612" y="7528" width="3232" height="4072"/>
+  <object id="24" name="Mac_and_cheese" x="10296" y="12936" width="1728" height="2080"/>
   <object id="25" x="6648" y="10472"/>
-  <object id="26" name="auditorio" x="5488" y="10000" width="1448" height="2104"/>
+  <object id="26" name="auditorio" x="800" y="12424" width="2792" height="2976"/>
   <object id="27" name="Arquitectura" x="6136" y="968" width="2280" height="2296"/>
   <object id="28" x="6088" y="-1320"/>
-  <object id="29" name="Biologicas" x="72" y="3800" width="2936" height="1704"/>
+  <object id="29" name="Biologicas" x="72" y="3800" width="3068" height="2356"/>
   <object id="30" x="-872" y="6504"/>
-  <object id="31" name="Bioquimica" x="88" y="7080" width="2960" height="1904"/>
+  <object id="31" name="Bioquimica" x="744" y="6424" width="2396" height="2840"/>
   <object id="32" name="Matematicas" x="7488" y="6432" width="3800" height="2216"/>
   <object id="33" x="6312" y="4600"/>
-  <object id="34" name="Edificio1" x="3928" y="3848" width="1032" height="2456"/>
+  <object id="34" name="Edificio1" x="4092" y="3848" width="952" height="2724"/>
   <object id="35" x="5944" y="3784"/>
-  <object id="36" name="Edificio2" x="5424" y="3984" width="1080" height="2408"/>
+  <object id="36" name="Edificio2" x="5944" y="3760" width="1080" height="2784"/>
   <object id="37" x="7552" y="3872"/>
   <object id="38" name="Museo" x="7456" y="3776" width="3736" height="2184"/>
   <object id="39" name="Turismo" x="8416" y="11136" width="1192" height="984"/>
  </objectgroup>
  <objectgroup id="10" name="Puntos_origen">
-  <object id="40" name="escom_hitbox" x="2248" y="3128">
+  <object id="40" name="escom_hitbox" x="2484" y="3164">
+   <point/>
+  </object>
+  <object id="43" name="palapas" x="960" y="1088">
+   <point/>
+  </object>
+  <object id="44" name="cafeteria" x="2422" y="1058">
+   <point/>
+  </object>
+  <object id="46" name="Biologicas" x="2984" y="6312">
+   <point/>
+  </object>
+  <object id="50" name="Bioquimica" x="3152" y="9248">
+   <point/>
+  </object>
+  <object id="54" name="Edificio1" x="5968" y="6640">
+   <point/>
+  </object>
+  <object id="55" name="Edificio2" x="7844" y="6716">
+   <point/>
+  </object>
+  <object id="56" name="Direccion" x="7424" y="11904">
+   <point/>
+  </object>
+  <object id="59" name="auditorio" x="3456" y="15264">
    <point/>
   </object>
  </objectgroup>
@@ -45,5 +117,13 @@
   <object id="11" x="4744" y="-1224"/>
   <object id="12" x="-648" y="-2936"/>
   <object id="15" name="Escom1" gid="101" x="2246" y="3098" width="3728" height="1968"/>
+  <object id="42" gid="102" x="944.152" y="1200.21" width="1996.97" height="1068.61"/>
+  <object id="45" gid="103" x="2381" y="1023" width="2188" height="1180"/>
+  <object id="49" gid="104" x="3050" y="6608" width="5280" height="3164"/>
+  <object id="51" gid="105" x="3461" y="9283" width="5132" height="3363"/>
+  <object id="52" gid="106" x="6157" y="6715" width="4148" height="3528"/>
+  <object id="53" gid="107" x="8052" y="6668" width="4144" height="3456"/>
+  <object id="57" gid="108" x="7380" y="12012" width="6112" height="5464"/>
+  <object id="58" name="auditorio" gid="109" x="3856" y="15632" width="5312" height="4688"/>
  </objectgroup>
 </map>
