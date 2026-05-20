@@ -16,86 +16,96 @@ class EventEngine(
 
         // ── Gastos ────────────────────────────────────────────────────
         GameEvent(
-            id               = "fuga_agua",
-            titulo           = "Fuga de agua",
-            descripcion      = "Una tuberia rota requiere reparacion urgente.",
-            probabilidad     = 0.25f,
-            efecto           = EventoEfecto.Gasto(25_000L),
-            requiereEdificios = 1
+            id                = "fuga_agua",
+            titulo            = "Fuga de agua",
+            descripcion       = "Una tuberia rota requiere reparacion urgente.",
+            probabilidad      = 0.25f,
+            efecto            = EventoEfecto.Gasto(25_000L),
+            requiereEdificios = 1,
+            reputacionDelta   = -1
         ),
         GameEvent(
-            id               = "corte_energia",
-            titulo           = "Corte de energia",
-            descripcion      = "Fallo electrico. Clases suspendidas un dia.",
-            probabilidad     = 0.20f,
-            efecto           = EventoEfecto.Gasto(40_000L),
-            requiereEdificios = 1
+            id                = "corte_energia",
+            titulo            = "Corte de energia",
+            descripcion       = "Fallo electrico. Clases suspendidas un dia.",
+            probabilidad      = 0.20f,
+            efecto            = EventoEfecto.Gasto(40_000L),
+            requiereEdificios = 1,
+            reputacionDelta   = -2
         ),
         GameEvent(
-            id               = "huelga_estudiantil",
-            titulo           = "Huelga estudiantil",
-            descripcion      = "Los alumnos exigen mejores condiciones.",
-            probabilidad     = 0.15f,
-            efecto           = EventoEfecto.Gasto(80_000L),
-            requiereEdificios = 2
+            id                = "huelga_estudiantil",
+            titulo            = "Huelga estudiantil",
+            descripcion       = "Los alumnos exigen mejores condiciones.",
+            probabilidad      = 0.15f,
+            efecto            = EventoEfecto.Gasto(80_000L),
+            requiereEdificios = 2,
+            reputacionDelta   = -5
         ),
         GameEvent(
-            id               = "mantenimiento_emergencia",
-            titulo           = "Mantenimiento de emergencia",
-            descripcion      = "Reparaciones urgentes en infraestructura.",
-            probabilidad     = 0.15f,
-            efecto           = EventoEfecto.Gasto(50_000L),
-            requiereEdificios = 2
+            id                = "mantenimiento_emergencia",
+            titulo            = "Mantenimiento de emergencia",
+            descripcion       = "Reparaciones urgentes en infraestructura.",
+            probabilidad      = 0.15f,
+            efecto            = EventoEfecto.Gasto(50_000L),
+            requiereEdificios = 2,
+            reputacionDelta   = -2
         ),
         GameEvent(
-            id               = "inspeccion_stps",
-            titulo           = "Inspeccion de STPS",
-            descripcion      = "Irregularidades detectadas en una revision laboral.",
-            probabilidad     = 0.10f,
-            efecto           = EventoEfecto.Gasto(60_000L),
-            requiereEdificios = 3
+            id                = "inspeccion_stps",
+            titulo            = "Inspeccion de STPS",
+            descripcion       = "Irregularidades detectadas en una revision laboral.",
+            probabilidad      = 0.10f,
+            efecto            = EventoEfecto.Gasto(60_000L),
+            requiereEdificios = 3,
+            reputacionDelta   = -4
         ),
 
         // ── Ingresos ──────────────────────────────────────────────────
         GameEvent(
-            id               = "feria_ciencias",
-            titulo           = "Feria de Ciencias",
-            descripcion      = "Exitosa feria atrae visitantes y nuevas matriculas.",
-            probabilidad     = 0.20f,
-            efecto           = EventoEfecto.Ingreso(80_000L),
-            requiereEdificios = 1
+            id                = "feria_ciencias",
+            titulo            = "Feria de Ciencias",
+            descripcion       = "Exitosa feria atrae visitantes y nuevas matriculas.",
+            probabilidad      = 0.20f,
+            efecto            = EventoEfecto.Ingreso(80_000L),
+            requiereEdificios = 1,
+            reputacionDelta   = 3
         ),
         GameEvent(
-            id               = "donacion_exalumno",
-            titulo           = "Donacion de exalumno",
-            descripcion      = "Un exalumno exitoso dona fondos al plantel.",
-            probabilidad     = 0.15f,
-            efecto           = EventoEfecto.Ingreso(120_000L),
-            requiereEdificios = 2
+            id                = "donacion_exalumno",
+            titulo            = "Donacion de exalumno",
+            descripcion       = "Un exalumno exitoso dona fondos al plantel.",
+            probabilidad      = 0.15f,
+            efecto            = EventoEfecto.Ingreso(120_000L),
+            requiereEdificios = 2,
+            reputacionDelta   = 4
         ),
         GameEvent(
-            id               = "beca_conahcyt",
-            titulo           = "Beca CONAHCYT",
-            descripcion      = "Proyecto de investigacion aprobado. Fondos recibidos.",
-            probabilidad     = 0.15f,
-            efecto           = EventoEfecto.Ingreso(150_000L),
-            requiereEdificios = 2
+            id                = "beca_conahcyt",
+            titulo            = "Beca CONAHCYT",
+            descripcion       = "Proyecto de investigacion aprobado. Fondos recibidos.",
+            probabilidad      = 0.15f,
+            efecto            = EventoEfecto.Ingreso(150_000L),
+            requiereEdificios = 2,
+            reputacionDelta   = 5
         ),
         GameEvent(
-            id               = "convenio_empresa",
-            titulo           = "Convenio empresarial",
-            descripcion      = "Empresa tecnologica firma convenio de colaboracion.",
-            probabilidad     = 0.10f,
-            efecto           = EventoEfecto.Ingreso(200_000L),
-            requiereEdificios = 3
+            id                = "convenio_empresa",
+            titulo            = "Convenio empresarial",
+            descripcion       = "Empresa tecnologica firma convenio de colaboracion.",
+            probabilidad      = 0.10f,
+            efecto            = EventoEfecto.Ingreso(200_000L),
+            requiereEdificios = 3,
+            reputacionDelta   = 6
         ),
         GameEvent(
-            id               = "premio_excelencia",
-            titulo           = "Premio nacional",
-            descripcion      = "El plantel recibe reconocimiento de excelencia educativa.",
-            probabilidad     = 0.05f,
-            efecto           = EventoEfecto.Ingreso(350_000L),
-            requiereEdificios = 4
+            id                = "premio_excelencia",
+            titulo            = "Premio nacional",
+            descripcion       = "El plantel recibe reconocimiento de excelencia educativa.",
+            probabilidad      = 0.05f,
+            efecto            = EventoEfecto.Ingreso(350_000L),
+            requiereEdificios = 4,
+            reputacionDelta   = 10
         )
     )
 
@@ -125,6 +135,9 @@ class EventEngine(
         when (val efecto = evento.efecto) {
             is EventoEfecto.Gasto   -> GameState.gastar(efecto.cantidad)
             is EventoEfecto.Ingreso -> GameState.acreditar(efecto.cantidad)
+        }
+        if (evento.reputacionDelta != 0) {
+            GameState.reputacion = (GameState.reputacion + evento.reputacionDelta).coerceIn(0, 100)
         }
     }
 }

@@ -29,6 +29,7 @@ class AndroidGameSaveManager(
                     edificiosJson  = serializarEdificios(),
                     ciclosJugados  = GameState.ciclosJugados,
                     alumnosTotales = calcularAlumnos(),
+                    reputacion     = GameState.reputacion,
                     fechaGuardado  = System.currentTimeMillis()
                 )
                 repository.guardar(entity)
@@ -63,6 +64,7 @@ class AndroidGameSaveManager(
                     GameState.nombreJugador  = entity.nombreJugador
                     GameState.nombreEscuela  = entity.nombreEscuela
                     GameState.alumnosTotales = entity.alumnosTotales
+                    GameState.reputacion     = entity.reputacion
                     deserializarEdificios(entity.edificiosJson)
                     Gdx.app.postRunnable { onDone(true) }
                 } else {

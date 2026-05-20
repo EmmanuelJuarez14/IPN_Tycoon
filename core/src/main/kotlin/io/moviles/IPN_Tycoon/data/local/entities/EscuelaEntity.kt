@@ -18,5 +18,6 @@ data class EscuelaEntity(
     val edificiosJson: String  = "",
     val ciclosJugados: Int     = 0,
     val alumnosTotales: Int    = 0,
+    val reputacion: Int        = 50,
     val fechaGuardado: Long    = System.currentTimeMillis()
 )

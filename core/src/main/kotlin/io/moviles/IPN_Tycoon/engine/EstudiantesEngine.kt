@@ -12,8 +12,10 @@ class EstudiantesEngine : GameCycleListener {
     override val resolutionOrder = ResolutionOrder.STUDENTS
 
     override fun onResolveCycle(cycle: Int) {
-        GameState.alumnosTotales = PropiedadRepository.propiedades.values
+        val mult = ReputacionEngine.multiplier(GameState.reputacion)
+        val base = PropiedadRepository.propiedades.values
             .filter { it.comprada }
             .sumOf { it.baseAlumnos * it.nivel }
+        GameState.alumnosTotales = (base * mult).toInt()
     }
 }

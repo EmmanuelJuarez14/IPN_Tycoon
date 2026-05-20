@@ -11,5 +11,6 @@ data class GameEvent(
     val descripcion: String,
     val probabilidad: Float,
     val efecto: EventoEfecto,
-    val requiereEdificios: Int = 1
+    val requiereEdificios: Int = 1,
+    val reputacionDelta: Int = 0
 )

@@ -30,6 +30,7 @@ import io.moviles.IPN_Tycoon.engine.EventEngine
 import io.moviles.IPN_Tycoon.engine.EventoEfecto
 import io.moviles.IPN_Tycoon.engine.GameCycleEngine
 import io.moviles.IPN_Tycoon.engine.GameEvent
+import io.moviles.IPN_Tycoon.engine.ReputacionEngine
 import ktx.actors.onChange
 import ktx.app.clearScreen
 import ktx.assets.toInternalFile
@@ -37,17 +38,19 @@ import ktx.scene2d.*
 
 class GameScreen(game: Main) : BaseScreen(game) {
 
-    // ── Motor de ciclos ───────────────────────────────────────────────
-    private val cycleEngine       = GameCycleEngine()
-    private val economyEngine     = EconomyEngine()
-    private val estudiantesEngine = EstudiantesEngine()
-    private val eventEngine       = EventEngine { evento -> showEventToast(evento) }
-    private var cycleTimer        = 0f
-    private val cycleDuration     = 60f
+    // ── Motor de ciclos ───
+    private val cycleEngine        = GameCycleEngine()
+    private val economyEngine      = EconomyEngine()
+    private val estudiantesEngine  = EstudiantesEngine()
+    private val reputacionEngine   = ReputacionEngine()
+    private val eventEngine        = EventEngine { evento -> showEventToast(evento) }
+    private var cycleTimer         = 0f
+    private val cycleDuration      = 60f
 
     init {
         cycleEngine.addListener(economyEngine)
         cycleEngine.addListener(estudiantesEngine)
+        cycleEngine.addListener(reputacionEngine)
         cycleEngine.addListener(eventEngine)
     }
 
@@ -113,11 +116,13 @@ class GameScreen(game: Main) : BaseScreen(game) {
     }
 
     // ── HUD ───────────────────────────────────────────────────────────
-    private var moneyLabel:      Label? = null
-    private var alumnosLabel:    Label? = null
-    private var toastLine1:      Label? = null   // ingresos del ciclo
-    private var toastLine2:      Label? = null   // total alumnos
-    private var toastTable:      Table? = null
+    private var moneyLabel:       Label? = null
+    private var alumnosLabel:     Label? = null
+    private var repLabel:         Label? = null
+    private var toastLine1:       Label? = null   // ingresos del ciclo
+    private var toastLine2:       Label? = null   // total alumnos
+    private var toastLine3:       Label? = null   // reputación
+    private var toastTable:       Table? = null
     private var eventTituloLabel: Label? = null
     private var eventEfectoLabel: Label? = null
     private var eventTable:       Table? = null
@@ -322,10 +327,12 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
         moneyLabel   = Label(formatMoney(GameState.dinero), goldStyle).apply { setFontScale(1.1f) }
         alumnosLabel = Label(formatAlumnos(GameState.alumnosTotales), cyanStyle)
+        repLabel     = Label("Rep: ${GameState.reputacion}%", Label.LabelStyle(font, Color.YELLOW))
 
         // ── Toast de ciclo (actor permanente, empieza invisible) ──────
         toastLine1 = Label("", Label.LabelStyle(font, Color.GREEN))
         toastLine2 = Label("", Label.LabelStyle(font, Color.CYAN))
+        toastLine3 = Label("", Label.LabelStyle(font, Color.YELLOW))
 
         val sw = stage.width
         val sh = stage.height
@@ -336,7 +343,8 @@ class GameScreen(game: Main) : BaseScreen(game) {
             pad(8f, 16f, 8f, 16f)
             defaults().left().padBottom(2f)
             add(toastLine1).row()
-            add(toastLine2)
+            add(toastLine2).row()
+            add(toastLine3)
             pack()
             color.a = 0f
             setPosition((sw - width) / 2f, sh * 0.08f)
@@ -369,6 +377,8 @@ class GameScreen(game: Main) : BaseScreen(game) {
                 add(moneyLabel)
                 add(Label("   Alumnos: ", cyanStyle)).padLeft(12f)
                 add(alumnosLabel)
+                add(Label("   ", Label.LabelStyle(font, Color.WHITE))).padLeft(8f)
+                add(repLabel)
             }).left().expandX().pad(10f)
 
             add(scene2d.image(menuIconTexture) {
@@ -438,6 +448,7 @@ class GameScreen(game: Main) : BaseScreen(game) {
 
             moneyLabel?.setText(formatMoney(GameState.dinero))
             alumnosLabel?.setText(formatAlumnos(GameState.alumnosTotales))
+            repLabel?.setText("Rep: ${GameState.reputacion}%")
         }
 
         // Siempre se ejecuta
@@ -465,8 +476,9 @@ class GameScreen(game: Main) : BaseScreen(game) {
     private fun showCycleToast(result: EconomyEngine.CycleResult) {
         val toast = toastTable ?: return
 
-        toastLine1?.setText("Ingresos:  +${formatMoney(result.ingresos)}")
-        toastLine2?.setText("Alumnos:    ${formatAlumnos(GameState.alumnosTotales)}")
+        toastLine1?.setText("Ingresos:   +${formatMoney(result.ingresos)}")
+        toastLine2?.setText("Alumnos:     ${formatAlumnos(GameState.alumnosTotales)}")
+        toastLine3?.setText("Reputacion:  ${GameState.reputacion}%")
 
         toast.clearActions()
         toast.color.a = 0f

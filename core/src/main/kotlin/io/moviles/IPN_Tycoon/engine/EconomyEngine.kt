@@ -20,9 +20,11 @@ class EconomyEngine : GameCycleListener {
         private set
 
     override fun onResolveCycle(cycle: Int) {
-        val ingresosTotales = PropiedadRepository.propiedades.values
+        val mult = ReputacionEngine.multiplier(GameState.reputacion)
+        val ingresosBrutos = PropiedadRepository.propiedades.values
             .filter { it.comprada }
             .sumOf { it.baseAlumnos * it.nivel * INGRESO_POR_ALUMNO }
+        val ingresosTotales = (ingresosBrutos * mult).toLong()
 
         lastResult = CycleResult(ingresosTotales)
         GameState.acreditar(ingresosTotales)

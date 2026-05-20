@@ -14,6 +14,7 @@ object GameState {
     private const val DINERO_INICIAL: Long = 100_500_000L
     var dinero: Long = DINERO_INICIAL
     var alumnosTotales: Int = 0
+    var reputacion: Int = 50   // 0–100; 50 = neutral al iniciar
 
     // ── API de dinero ─────────────────────────────────────────────────
     fun puedeComprar(costo: Long) = dinero >= costo
@@ -38,5 +39,6 @@ object GameState {
         ciclosJugados  = 0
         dinero         = DINERO_INICIAL
         alumnosTotales = 0
+        reputacion     = 50
     }
 }
